@@ -1,0 +1,14 @@
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+prophet>=1.1.4
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.15.0
+streamlit>=1.28.0
+scipy>=1.11.0
+pyyaml>=6.0
+loguru>=0.7.0
+pyarrow>=14.0.0           # For reading parquet files (NYC taxi data)
+jupyter>=1.0.0             # For running analysis notebooks
+ipykernel>=6.0.0           # Jupyter kernel support

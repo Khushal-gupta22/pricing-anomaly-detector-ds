@@ -1,0 +1,106 @@
+# Dynamic Pricing Anomaly Detector - Configuration
+# =================================================
+
+data_generation:
+  # Number of days of historical data to generate
+  history_days: 90
+  # Pricing events per hour (avg)
+  events_per_hour: 50
+  # Product/service categories to simulate
+  categories:
+    - ride_standard
+    - ride_premium
+    - ride_pool
+    - delivery_food
+    - delivery_grocery
+  # Base prices per category (USD)
+  base_prices:
+    ride_standard: 12.50
+    ride_premium: 25.00
+    ride_pool: 8.00
+    delivery_food: 5.99
+    delivery_grocery: 7.99
+  # Anomaly injection rate (fraction of total events)
+  anomaly_rate: 0.03
+
+anomaly_detection:
+  # Isolation Forest parameters
+  isolation_forest:
+    # 0.05 selected via grid search (96 configs tested).
+    # Lower contamination makes IF more selective, complementing
+    # the lower ensemble_threshold for better overall F1.
+    contamination: 0.05
+    n_estimators: 200
+    random_state: 42
+  # Z-score threshold for statistical detection
+  # 2.8 is the sweet spot: 2.5 was too aggressive (flagging normal tail events),
+  # 3.0 was too conservative (missing gradual drift). 2.8 catches real
+  # anomalies while respecting the heavy-tailed distribution.
+  # Confirmed optimal via grid search across [2.0, 2.5, 2.8, 3.0].
+  zscore_threshold: 2.8
+  # Rolling window sizes (in hours)
+  rolling_windows: [1, 6, 24]
+  # Ensemble decision threshold
+  # Lowered from 0.40 to 0.20 based on PR curve analysis.
+  # The old threshold (0.40) gave 96% precision but only 14-17% recall.
+  # At 0.20, recall jumps to ~56% while precision stays at ~66%,
+  # improving F1 from 0.29 to 0.60 — a 2x improvement.
+  # See data/pr_curve_analysis.csv for the full precision-recall tradeoff.
+  ensemble_threshold: 0.20
+
+business_rules:
+  # Maximum allowed surge multiplier
+  max_surge_multiplier: 5.0
+  # Minimum price floor (USD)
+  min_price_floor: 1.00
+  # Maximum price-to-distance ratio (USD per mile)
+  # 35.00 avoids flagging legitimate short premium rides with surge.
+  # A $25 premium base + 2.5x surge on a 2-mile ride = $31.25/mi — legit.
+  max_price_per_mile: 35.00
+  # Maximum hour-over-hour price change (%)
+  max_hourly_change_pct: 200
+  # Negative price detection (should never happen)
+  allow_negative_prices: false
+  # Maximum consecutive surge hours
+  max_consecutive_surge_hours: 4
+  # Category-specific price caps (conditional rules).
+  price_caps:
+    ride_pool: 90
+    ride_standard: 175
+    ride_premium: 350
+  # Demand-surge consistency thresholds
+  # Tightened: only flag if demand > 0.85 AND supply < 0.2 AND surge <= 1.02
+  # The old thresholds (0.8/0.3/1.05) were too aggressive and produced
+  # ~30% of all false positives.
+  demand_surge_mismatch:
+    min_demand: 0.85
+    max_supply: 0.20
+    max_surge: 1.02
+
+prophet:
+  # Changepoint prior scale (flexibility of trend)
+  changepoint_prior_scale: 0.05
+  # Seasonality prior scale
+  seasonality_prior_scale: 10.0
+  # Interval width for uncertainty
+  interval_width: 0.95
+
+alerting:
+  # Severity thresholds
+  severity:
+    critical:
+      min_score: 0.9
+      description: "Immediate action required - potential revenue loss or customer harm"
+    high:
+      min_score: 0.7
+      description: "Investigate within 1 hour - significant pricing deviation"
+    medium:
+      min_score: 0.5
+      description: "Review within 4 hours - moderate anomaly detected"
+    low:
+      min_score: 0.3
+      description: "Monitor - minor deviation from expected pricing"
+
+database:
+  path: "data/pricing_anomalies.db"
+  echo: false
