@@ -17,27 +17,9 @@ Run: streamlit run dashboards/app.py
 
 import sys
 import os
-import subprocess
 
 # Add project root to path
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VENV_PYTHON = os.path.join(PROJECT_ROOT, ".venv", "Scripts", "python.exe")
-if os.path.exists(VENV_PYTHON) and os.path.abspath(sys.executable) != os.path.abspath(VENV_PYTHON):
-    print(f"[dashboard] Detected venv at .venv/ — re-launching with venv Python...", flush=True)
-    result = subprocess.run(
-        [VENV_PYTHON, "-u", __file__] + sys.argv[1:],
-        cwd=PROJECT_ROOT,
-    )
-    sys.exit(result.returncode)
-    
-# Ensure print output is visible immediately (no buffering)
-if hasattr(sys.stdout, 'reconfigure'):
-    sys.stdout.reconfigure(line_buffering=True)
-if hasattr(sys.stderr, 'reconfigure'):
-    sys.stderr.reconfigure(line_buffering=True)
-os.environ['PYTHONUNBUFFERED'] = '1'
-
-print(f"[starting app] Starting (Python: {sys.executable})", flush=True)
 sys.path.insert(0, PROJECT_ROOT)
 
 import streamlit as st

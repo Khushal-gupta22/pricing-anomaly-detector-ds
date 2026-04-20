@@ -8,13 +8,13 @@ venv/
 .venv/
 env/
 
-# Data files (generated, not tracked)
+# Data files (generated, not tracked — except the pre-built demo DB)
 data/*.csv
-data/*.db
 data/*.sqlite
 data/*.parquet
 data/*.jsonl
 *.db
+!data/pricing_anomalies.db
 
 # IDE
 .vscode/

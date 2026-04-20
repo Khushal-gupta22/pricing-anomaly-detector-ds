@@ -10,6 +10,12 @@ Dynamic pricing systems (Uber, Lyft, DoorDash, etc.) can silently fail in produc
 
 **Key result:** Ensemble F1 = **0.60** on synthetic data (after threshold tuning via PR curve analysis) and **0.80** on real NYC taxi data.
 
+## Live Demo
+
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://dynamic-pricing-anomaly-detector.streamlit.app)
+
+Deploy your own: Fork this repo → [share.streamlit.io](https://share.streamlit.io) → point to `dashboards/app.py` → Deploy. The pre-built DB is included, no setup needed.
+
 ## Quick Start
 
 ```bash
