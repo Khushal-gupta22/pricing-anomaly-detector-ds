@@ -12,7 +12,7 @@ Dynamic pricing systems (Uber, Lyft, DoorDash, etc.) can silently fail in produc
 
 ## Live Demo
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://dynamic-pricing-anomaly-detector.streamlit.app)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://pricing-anomaly-detector-ds-khushal.streamlit.app)
 
 Deploy your own: Fork this repo → [share.streamlit.io](https://share.streamlit.io) → point to `dashboards/app.py` → Deploy. The pre-built DB is included, no setup needed.
 
