@@ -37,3 +37,6 @@ build/
 
 # Logs
 *.log
+
+# Personal notes (not for GitHub)
+DEEP_DIVE.md
