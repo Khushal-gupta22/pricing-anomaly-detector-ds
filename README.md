@@ -40,19 +40,19 @@ python run_nyc_test.py                       # Validate on real NYC taxi data
 
 ### Synthetic Data (~12% anomaly rate)
 
-| Method | Precision | Recall | F1 |
-|---|---|---|---|
-| ML Ensemble (tuned) | 66.4% | 55.6% | **60.5%** |
-| Business Rules | 46.7% | 36.3% | 40.8% |
-| Combined | 49.7% | 57.0% | 53.1% |
+| Method              | Precision | Recall | F1        |
+| ------------------- | --------- | ------ | --------- |
+| ML Ensemble (tuned) | 66.4%     | 55.6%  | **60.5%** |
+| Business Rules      | 46.7%     | 36.3%  | 40.8%     |
+| Combined            | 49.7%     | 57.0%  | 53.1%     |
 
 ### NYC Taxi Data (100K real trips)
 
-| Method | Precision | Recall | F1 |
-|---|---|---|---|
-| ML Ensemble | 83.3% | 76.8% | **79.9%** |
-| Business Rules | 86.1% | 69.1% | 76.7% |
-| Combined | 75.6% | 80.7% | 78.0% |
+| Method         | Precision | Recall | F1        |
+| -------------- | --------- | ------ | --------- |
+| ML Ensemble    | 83.3%     | 76.8%  | **79.9%** |
+| Business Rules | 86.1%     | 69.1%  | 76.7%     |
+| Combined       | 75.6%     | 80.7%  | 78.0%     |
 
 ### Tuning Impact
 
@@ -71,15 +71,15 @@ python run_nyc_test.py
 
 **Results on real data:**
 
-| Method | Precision | Recall | F1 |
-|---|---|---|---|
-| ML Ensemble | 83.3% | 76.8% | **79.9%** |
-| Business Rules | 86.1% | 69.1% | 76.7% |
-| Combined | 75.6% | 80.7% | 78.0% |
-| LOF | — | — | 29% |
-| DBSCAN | — | — | 18% |
+| Method         | Precision | Recall | F1        |
+| -------------- | --------- | ------ | --------- |
+| ML Ensemble    | 83.3%     | 76.8%  | **79.9%** |
+| Business Rules | 86.1%     | 69.1%  | 76.7%     |
+| Combined       | 75.6%     | 80.7%  | 78.0%     |
+| LOF            | —         | —      | 29%       |
+| DBSCAN         | —         | —      | 18%       |
 
-The ensemble performs significantly better on real data (F1=0.80) than synthetic (F1=0.60), likely because real-world anomalies (extreme fares, zero-distance trips) are more separable than synthetic gradual drift. LOF and DBSCAN struggled with the variable-density real distribution — confirming Isolation Forest as the right choice.
+The ensemble performs significantly better on real data (F1=0.80) than synthetic (F1=0.60), likely because real-world anomalies (extreme fares, zero-distance trips) are more separable than synthetic gradual drift. LOF and DBSCAN struggled with the variable-density real distribution, hence confirming Isolation Forest as the right choice.
 
 ## Architecture
 
@@ -131,19 +131,19 @@ Rules  Prophet          ← Business rules + time series
 
 ## Tech Stack & Design Decisions
 
-| Component | Technology | Why |
-|---|---|---|
-| Anomaly Detection | Isolation Forest, LOF, One-Class SVM, DBSCAN (scikit-learn) | Benchmarked 4 methods — IF won on precision/speed tradeoff. LOF is transductive (can't predict on new data), SVM is 6x slower for similar results, DBSCAN is eps-sensitive. |
-| Statistical Analysis | Z-score, MAD, IQR (numpy/scipy) | Each handles different distributions: Z-score for Gaussian, MAD for heavy tails (which pricing data has — kurtosis > 0), IQR for skewed data, rolling for temporal changes. No single method covers all. |
-| Time Series | Prophet | Captures daily + weekly seasonality with uncertainty intervals. Catches gradual drift that point-in-time detectors miss entirely. |
-| Business Rules | Custom Python | Deterministic, interpretable, zero false negatives on invariants (negative prices should never happen regardless of what any ML model thinks). |
-| Storage | SQLite | Zero-config, embedded, fast enough for 100K+ events. This is a monitoring system, not a data warehouse. In production you'd swap for Postgres or TimescaleDB. |
-| Dashboard | Streamlit + Plotly | Interactive, fast to build, deployable to Streamlit Cloud. Plotly gives hover tooltips and zoom which matter for anomaly investigation. |
-| Experiment Tracking | Custom JSONL logger | Lightweight alternative to MLflow for a single-developer project. Logs params, metrics, metadata per run. Flat file = no server, no database, version-controllable. |
-| Ensemble Strategy | Weighted vote (IF 40%, Stats 35%, Context 25%) | No single method catches everything. IF misses context-dependent anomalies. Z-scores fail with heavy tails. Rules can't detect novel failures. Ensemble reduces false negatives while rules provide a hard safety net. |
-| Vectorization | numpy/pandas throughout | Original `iterrows()` approach took minutes on 100K events. Fully vectorized operations run in seconds. Sub-minute latency matters for real-time monitoring. |
-| Synthetic Data | Custom generator with anomaly clustering | Real pricing data is proprietary. The generator models actual pricing behavior (sigmoid surge curves, supply-demand dynamics) and injects realistic failure modes in bursts of 5-20 — how bugs actually manifest in production, not as isolated events. |
-| Real-World Validation | NYC TLC Taxi Dataset | Validates that feature engineering and thresholds work on real distributions with genuine heavy tails, seasonality, and data quality issues. |
+| Component             | Technology                                                  | Why                                                                                                                                                                                                                                                    |
+| --------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Anomaly Detection     | Isolation Forest, LOF, One-Class SVM, DBSCAN (scikit-learn) | Benchmarked 4 methods: IF won on precision/speed tradeoff. LOF is transductive (can't predict on new data), SVM is 6x slower for similar results, DBSCAN is eps-sensitive.                                                                             |
+| Statistical Analysis  | Z-score, MAD, IQR (numpy/scipy)                             | Each handles different distributions: Z-score for Gaussian, MAD for heavy tails (which pricing data has kurtosis > 0), IQR for skewed data, rolling for temporal changes. No single method covers all.                                                 |
+| Time Series           | Prophet                                                     | Captures daily + weekly seasonality with uncertainty intervals. Catches gradual drift that point-in-time detectors miss entirely.                                                                                                                      |
+| Business Rules        | Custom Python                                               | Deterministic, interpretable, zero false negatives on invariants (negative prices should never happen regardless of what any ML model thinks).                                                                                                         |
+| Storage               | SQLite                                                      | Zero-config, embedded, fast enough for 100K+ events. This is a monitoring system, not a data warehouse. In production you'd swap for Postgres or TimescaleDB.                                                                                          |
+| Dashboard             | Streamlit + Plotly                                          | Interactive, fast to build, deployable to Streamlit Cloud. Plotly gives hover tooltips and zoom which matter for anomaly investigation.                                                                                                                |
+| Experiment Tracking   | Custom JSONL logger                                         | Lightweight alternative to MLflow for a single-developer project. Logs params, metrics, metadata per run. Flat file = no server, no database, version-controllable.                                                                                    |
+| Ensemble Strategy     | Weighted vote (IF 40%, Stats 35%, Context 25%)              | No single method catches everything. IF misses context-dependent anomalies. Z-scores fail with heavy tails. Rules can't detect novel failures. Ensemble reduces false negatives while rules provide a hard safety net.                                 |
+| Vectorization         | numpy/pandas throughout                                     | Original `iterrows()` approach took minutes on 100K events. Fully vectorized operations run in seconds. Sub-minute latency matters for real-time monitoring.                                                                                           |
+| Synthetic Data        | Custom generator with anomaly clustering                    | Real pricing data is proprietary. The generator models actual pricing behavior (sigmoid surge curves, supply-demand dynamics) and injects realistic failure modes in bursts of 5-20; how bugs actually manifest in production, not as isolated events. |
+| Real-World Validation | NYC TLC Taxi Dataset                                        | Validates that feature engineering and thresholds work on real distributions with genuine heavy tails, seasonality, and data quality issues.                                                                                                           |
 
 ## License
 
